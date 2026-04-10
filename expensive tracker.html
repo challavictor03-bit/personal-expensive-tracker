@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Expense Tracker</title>
+<style>
+    body {
+        font-family: Arial;
+        background: #f4f4f4;
+        display: flex;
+        justify-content: center;
+    }
+    .container {
+        background: white;
+        padding: 20px;
+        width: 350px;
+        margin-top: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px gray;
+    }
+    h2 {
+        text-align: center;
+    }
+    .balance {
+        text-align: center;
+        margin: 10px 0;
+    }
+    .inc-exp {
+        display: flex;
+        justify-content: space-between;
+        margin: 10px 0;
+    }
+    .inc-exp div {
+        width: 45%;
+        padding: 10px;
+        text-align: center;
+        border-radius: 5px;
+    }
+    .income {
+        background: #d4edda;
+        color: green;
+    }
+    .expense {
+        background: #f8d7da;
+        color: red;
+    }
+    ul {
+        list-style: none;
+        padding: 0;
+    }
+    li {
+        background: #eee;
+        margin: 5px 0;
+        padding: 8px;
+        display: flex;
+        justify-content: space-between;
+    }
+    .btn {
+        background: red;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    form input, form button {
+        width: 100%;
+        padding: 8px;
+        margin: 5px 0;
+    }
+    button {
+        background: blue;
+        color: white;
+        border: none;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Expense Tracker</h2>
+
+    <div class="balance">
+        <h3>Balance: ₹<span id="balance">0</span></h3>
+    </div>
+
+    <div class="inc-exp">
+        <div class="income">
+            Income ₹<span id="money-plus">0</span>
+        </div>
+        <div class="expense">
+            Expense ₹<span id="money-minus">0</span>
+        </div>
+    </div>
+
+    <h3>Transactions</h3>
+    <ul id="list"></ul>
+
+    <h3>Add Transaction</h3>
+    <form id="form">
+        <input type="text" id="text" placeholder="Enter description" required>
+        <input type="number" id="amount" placeholder="Enter amount (+income, -expense)" required>
+        <button>Add</button>
+    </form>
+</div>
+
+<script>
+const balance = document.getElementById('balance');
+const money_plus = document.getElementById('money-plus');
+const money_minus = document.getElementById('money-minus');
+const list = document.getElementById('list');
+const form = document.getElementById('form');
+const text = document.getElementById('text');
+const amount = document.getElementById('amount');
+
+let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+function addTransaction(e) {
+    e.preventDefault();
+
+    const transaction = {
+        id: Date.now(),
+        text: text.value,
+        amount: +amount.value
+    };
+
+    transactions.push(transaction);
+    updateLocalStorage();
+    init();
+
+    text.value = '';
+    amount.value = '';
+}
+
+function addTransactionDOM(transaction) {
+    const sign = transaction.amount < 0 ? '-' : '+';
+
+    const item = document.createElement('li');
+
+    item.innerHTML = `
+        ${transaction.text} 
+        <span>${sign}₹${Math.abs(transaction.amount)}</span>
+        <button class="btn" onclick="removeTransaction(${transaction.id})">x</button>
+    `;
+
+    list.appendChild(item);
+}
+
+function updateValues() {
+    const amounts = transactions.map(t => t.amount);
+
+    const total = amounts.reduce((a, b) => a + b, 0).toFixed(2);
+    const income = amounts.filter(a => a > 0).reduce((a, b) => a + b, 0).toFixed(2);
+    const expense = (amounts.filter(a => a < 0).reduce((a, b) => a + b, 0) * -1).toFixed(2);
+
+    balance.innerText = total;
+    money_plus.innerText = income;
+    money_minus.innerText = expense;
+}
+
+function removeTransaction(id) {
+    transactions = transactions.filter(t => t.id !== id);
+    updateLocalStorage();
+    init();
+}
+
+function updateLocalStorage() {
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+}
+
+function init() {
+    list.innerHTML = '';
+    transactions.forEach(addTransactionDOM);
+    updateValues();
+}
+
+form.addEventListener('submit', addTransaction);
+
+init();
+</script>
+
+</body>
+</html>
